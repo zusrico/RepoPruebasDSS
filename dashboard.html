@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - DSS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .stat {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin: 1rem 0;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: inherit;
+            margin-bottom: 0.5rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        .results {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+
+        .success {
+            background: #efe;
+            color: #3c3;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .table th {
+            background: #667eea;
+            color: white;
+            padding: 0.8rem;
+            text-align: left;
+        }
+
+        .table td {
+            padding: 0.8rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <h1>📊 DSS Dashboard</h1>
+            <nav>
+                <a href="index.html" style="color: white; text-decoration: none; margin-right: 1rem;">← Volver a inicio</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Estadísticas -->
+        <div class="dashboard-grid" id="statsContainer">
+            <div class="card">
+                <h2>Cargando estadísticas...</h2>
+                <div class="loading">Conectando con la API...</div>
+            </div>
+        </div>
+
+        <!-- Validador de Documentos -->
+        <div class="card">
+            <h2>Validar Documento (DNI/NIE)</h2>
+            <form id="documentForm">
+                <div class="form-group">
+                    <label for="docType">Tipo de Documento:</label>
+                    <select id="docType">
+                        <option value="DNI">DNI</option>
+                        <option value="NIE">NIE</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="docNumber">Número de Documento:</label>
+                    <input type="text" id="docNumber" placeholder="Ej: 12345678Z">
+                </div>
+                <div class="form-group">
+                    <label for="userId">ID de Usuario (opcional):</label>
+                    <input type="number" id="userId" placeholder="Ej: 1">
+                </div>
+                <button type="submit">Validar</button>
+                <div id="documentResult"></div>
+            </form>
+        </div>
+
+        <!-- Crear Usuario -->
+        <div class="card">
+            <h2>Crear Nuevo Usuario</h2>
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="username">Usuario:</label>
+                    <input type="text" id="username" placeholder="usuario123" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" placeholder="usuario@ejemplo.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="fullname">Nombre Completo:</label>
+                    <input type="text" id="fullname" placeholder="Juan Pérez García" required>
+                </div>
+                <div class="form-group">
+                    <label for="university">Universidad:</label>
+                    <input type="text" id="university" placeholder="Universidad de Jerez" required>
+                </div>
+                <button type="submit">Crear Usuario</button>
+                <div id="userResult"></div>
+            </form>
+        </div>
+
+        <!-- Lista de Usuarios -->
+        <div class="card">
+            <h2>Usuarios Registrados</h2>
+            <button onclick="loadUsers()">Cargar Usuarios</button>
+            <div id="usersTable"></div>
+        </div>
+
+        <!-- Lista de Proyectos -->
+        <div class="card">
+            <h2>Proyectos</h2>
+            <button onclick="loadProjects()">Cargar Proyectos</button>
+            <div id="projectsTable"></div>
+        </div>
+    </div>
+
+    <script src="api_client.js"></script>
+    <script>
+        // Cargar estadísticas al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatistics();
+        });
+
+        // Cargar Estadísticas
+        function loadStatistics() {
+            dssAPI.getStatistics()
+                .then(response => {
+                    if (response.status === 'success') {
+                        const data = response.data;
+                        const html = `
+                            <div class="card">
+                                <h2>Total de Usuarios</h2>
+                                <div class="stat">${data.total_users}</div>
+                            </div>
+                            <div class="card">
+                                <h2>Total de Proyectos</h2>
+                                <div class="stat">${data.total_projects}</div>
+                            </div>
+                            <div class="card">
+                                <h2>Validaciones</h2>
+                                <div class="stat">${data.total_validations}</div>
+                            </div>
+                        `;
+                        document.getElementById('statsContainer').innerHTML = html;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('statsContainer').innerHTML = 
+                        `<div class="card"><div class="error">Error al conectar con la API: ${error.message}</div></div>`;
+                });
+        }
+
+        // Validar Documento
+        document.getElementById('documentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('documentResult');
+            resultDiv.innerHTML = '<div class="loading">Validando...</div>';
+
+            const docType = document.getElementById('docType').value;
+            const docNumber = document.getElementById('docNumber').value.toUpperCase();
+            const userId = document.getElementById('userId').value || null;
+
+            dssAPI.validateDocument(docType, docNumber, userId ? parseInt(userId) : null)
+                .then(response => {
+                    if (response.status === 'success') {
+                        const isValid = response.is_valid;
+                        resultDiv.innerHTML = `
+                            <div class="${isValid ? 'success' : 'error'}">
+                                ${isValid ? '✓ Documento válido' : '✗ Documento inválido'}
+                                <br>Tipo: ${response.document_type}
+                                <br>Número: ${response.document_number}
+                            </div>
+                        `;
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                });
+        });
+
+        // Crear Usuario
+        document.getElementById('userForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const resultDiv = document.getElementById('userResult');
+            resultDiv.innerHTML = '<div class="loading">Creando usuario...</div>';
+
+            const userData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: 'hashed_password_' + Math.random().toString(36).substr(2, 9),
+                full_name: document.getElementById('fullname').value,
+                university: document.getElementById('university').value
+            };
+
+            dssAPI.createUser(userData)
+                .then(response => {
+                    if (response.status === 'success') {
+                        resultDiv.innerHTML = `<div class="success">✓ Usuario creado correctamente</div>`;
+                        document.getElementById('userForm').reset();
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                });
+        });
+
+        // Cargar Usuarios
+        function loadUsers() {
+            const tableDiv = document.getElementById('usersTable');
+            tableDiv.innerHTML = '<div class="loading">Cargando usuarios...</div>';
+
+            dssAPI.getUsers()
+                .then(response => {
+                    if (response.status === 'success' && response.data.length > 0) {
+                        let html = '<table class="table"><thead><tr><th>Usuario</th><th>Email</th><th>Nombre</th><th>Universidad</th></tr></thead><tbody>';
+                        response.data.forEach(user => {
+                            html += `<tr><td>${user.username}</td><td>${user.email}</td><td>${user.full_name}</td><td>${user.university || 'N/A'}</td></tr>`;
+                        });
+                        html += '</tbody></table>';
+                        tableDiv.innerHTML = html;
+                    } else {
+                        tableDiv.innerHTML = '<div class="error">No hay usuarios registrados</div>';
+                    }
+                })
+                .catch(error => {
+                    tableDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                });
+        }
+
+        // Cargar Proyectos
+        function loadProjects() {
+            const tableDiv = document.getElementById('projectsTable');
+            tableDiv.innerHTML = '<div class="loading">Cargando proyectos...</div>';
+
+            dssAPI.getProjects()
+                .then(response => {
+                    if (response.status === 'success' && response.data.length > 0) {
+                        let html = '<table class="table"><thead><tr><th>Título</th><th>Usuario</th><th>Categoría</th><th>Estado</th></tr></thead><tbody>';
+                        response.data.forEach(project => {
+                            html += `<tr><td>${project.title}</td><td>${project.username}</td><td>${project.category || 'N/A'}</td><td>${project.status}</td></tr>`;
+                        });
+                        html += '</tbody></table>';
+                        tableDiv.innerHTML = html;
+                    } else {
+                        tableDiv.innerHTML = '<div class="error">No hay proyectos registrados</div>';
+                    }
+                })
+                .catch(error => {
+                    tableDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                });
+        }
+    </script>
+</body>
+</html>
